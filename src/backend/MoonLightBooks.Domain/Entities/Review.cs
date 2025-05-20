@@ -7,8 +7,8 @@
         public int BookId { get; set; }
         public Book Book { get; set; }
 
-        public int UserId { get; set; }
-        public User User { get; set; }
+        public string UserId { get; set; }
+        public ApplicationUser User { get; set; }
 
         public string Comment { get; set; } = string.Empty;
         public int Rating { get; set; } // 1-5 arası yıldız puanı

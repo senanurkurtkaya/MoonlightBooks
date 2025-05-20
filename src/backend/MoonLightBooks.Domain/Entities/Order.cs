@@ -5,8 +5,8 @@
     {
         public int Id { get; set; }
 
-        public int UserId { get; set; }  // Siparişi kimin verdiği
-        public User User { get; set; }  // Navigation
+        public string UserId { get; set; }  // Siparişi kimin verdiği
+        public ApplicationUser User { get; set; }  // Navigation
 
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
         public decimal TotalPrice { get; set; }

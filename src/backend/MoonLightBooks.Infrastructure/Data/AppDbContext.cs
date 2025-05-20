@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNet.Identity.EntityFramework;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MoonLightBooks.Domain.Entities;
 using System.Collections.Generic;
 
 namespace MoonLightBooks.Infrastructure.Data
 {
-    public class AppDbContext : IdentityDbContext<User>
+    public class AppDbContext : IdentityDbContext<MoonLightBooks.Domain.Entities.ApplicationUser>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-        public DbSet<User> Users => Set<User>();
+        public DbSet<MoonLightBooks.Domain.Entities.ApplicationUser> Users => Set<MoonLightBooks.Domain.Entities.ApplicationUser>();
         public DbSet<Book> Books => Set<Book>();
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Order> Orders => Set<Order>();
@@ -16,9 +16,6 @@ namespace MoonLightBooks.Infrastructure.Data
 
         public DbSet<CartItem> CartItems => Set<CartItem>();
         public DbSet<Review> Reviews { get; set; }
-
-      
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

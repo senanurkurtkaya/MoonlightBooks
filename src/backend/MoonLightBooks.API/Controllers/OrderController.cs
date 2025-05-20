@@ -26,7 +26,7 @@ namespace MoonLightBooks.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var orderId = await _orderService.CreateOrderAsync(userId, dto);
 
             if (orderId == 0)
@@ -45,7 +45,7 @@ namespace MoonLightBooks.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetOrders()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             var orders = await _orderService.GetOrdersAsync(userId);
             return Ok(orders);
         }

@@ -19,7 +19,7 @@ namespace MoonLightBooks.API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        public async Task<IActionResult> Register(RegisterDto dto)
         {
             try
             {

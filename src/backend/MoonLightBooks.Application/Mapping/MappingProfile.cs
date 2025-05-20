@@ -4,6 +4,7 @@ using MoonLightBooks.Application.DTOs.Auth;
 using MoonLightBooks.Application.DTOs.Admin;
 using MoonLightBooks.Domain.Entities;
 using MoonLightBooks.Application.DTOs.Cart;
+using MoonLightBooks.Application.DTOs.User;
 
 namespace MoonLightBooks.Application.Mapping
 {
@@ -28,7 +29,7 @@ namespace MoonLightBooks.Application.Mapping
             CreateMap<AddToCartDto, CartItem>();
 
             // Admin - kullanıcı listesi
-            CreateMap<User, UserListDto>();
+            CreateMap<ApplicationUser, UserDto>();
         }
     }
 }

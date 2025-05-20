@@ -1,5 +1,4 @@
-﻿using Humanizer.Configuration;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -8,9 +7,7 @@ using MoonLightBooks.Application.Interfaces;
 using MoonLightBooks.Domain.Entities;
 using MoonLightBooks.Infrastructure.Data;
 using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,45 +20,54 @@ namespace MoonLightBooks.Infrastructure.Services
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AuthService(AppDbContext context, IConfiguration configuration , UserManager<User> userManager)
+        public AuthService(AppDbContext context,
+                           IConfiguration configuration,
+                           UserManager<ApplicationUser> userManager,
+                           RoleManager<IdentityRole> roleManager)
         {
             _context = context;
             _configuration = configuration;
             _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
-            var users = _context.Users.ToList();
-
-
-            // Email zaten kayıtlı mı?
-            if (await _context.Users.AnyAsync(u => u.Email.ToLower() == dto.Email.ToLower()))
+            if (await _userManager.FindByEmailAsync(dto.Email) != null)
                 throw new Exception("Bu email adresi zaten kayıtlı.");
 
-            // Şifre hash'leme
             var passwordHash = HashPassword(dto.Password);
 
-            // 🔽 Email'e göre rol atama
-            var role = dto.Email.ToLower().Contains("admin") ? "Admin" : "User";
-
-            var user = new User
+            var user = new ApplicationUser
             {
                 FullName = dto.FullName,
                 Email = dto.Email.ToLower(),
+                UserName = dto.Email.ToLower(),
                 PasswordHash = passwordHash,
-                Role = dto.Role  // 🔥 Artık dinamik!
+                Role = "User" // default rolü saklamak istiyorsan
             };
 
+            // EF ile kaydet
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            // Identity tablosuna rol ataması
+            var role = "User";
+
+            if (!await _roleManager.RoleExistsAsync(role))
+                await _roleManager.CreateAsync(new IdentityRole(role));
+
+            await _userManager.AddToRoleAsync(user, role);
+
             return GenerateToken(user);
         }
+
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.ToLower());
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.ToLower());
 
             if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
                 throw new Exception("Geçersiz email veya şifre.");
@@ -69,38 +75,33 @@ namespace MoonLightBooks.Infrastructure.Services
             return GenerateToken(user);
         }
 
-
-
-
-        // Şifreyi hash'le (HMACSHA256 kullanıyoruz)
         private string HashPassword(string password)
         {
-            var key = Encoding.UTF8.GetBytes("gizli-test-key-12345678901234567890"); // en az 32 byte
+            var key = Encoding.UTF8.GetBytes("gizli-test-key-12345678901234567890"); // min 32 byte
             using var hmac = new HMACSHA256(key);
             var passwordBytes = Encoding.UTF8.GetBytes(password);
             var hashBytes = hmac.ComputeHash(passwordBytes);
             return Convert.ToBase64String(hashBytes);
         }
 
-
         private bool VerifyPassword(string password, string storedHash)
         {
             return HashPassword(password) == storedHash;
         }
 
-        private AuthResponseDto GenerateToken(User user)
+     
+        private AuthResponseDto GenerateToken(ApplicationUser user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
-        {
-               new Claim("fullName", user.FullName), 
-               new Claim(ClaimTypes.Email, user.Email),
-               new Claim(ClaimTypes.Role, user.Role),
-               new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            };
-
+            {
+        new Claim("fullName", user.FullName),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Role, user.Role), // 👈 BU ÖNEMLİ
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+    };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -118,9 +119,11 @@ namespace MoonLightBooks.Infrastructure.Services
             };
         }
 
-        public async Task<ForgotPasswordDto> ForgotPasswordAsync(string email)
+
+
+        public async Task<AuthResult> ForgotPasswordAsync(string email)
         {
-            var user = await _context.FindByEmailAsync(email);
+            var user = await _userManager.FindByEmailAsync(email);
 
             if (user == null)
                 return new AuthResult { IsSuccess = false, Message = "Kullanıcı bulunamadı." };
@@ -129,11 +132,9 @@ namespace MoonLightBooks.Infrastructure.Services
 
             var resetLink = $"https://seninsiten.com/reset-password?email={email}&token={HttpUtility.UrlEncode(token)}";
 
-            // E-posta gönderme işlemi yapılabilir burada. Şimdilik log'a yazalım:
             Console.WriteLine($"Şifre sıfırlama linki: {resetLink}");
 
             return new AuthResult { IsSuccess = true };
         }
     }
 }
-

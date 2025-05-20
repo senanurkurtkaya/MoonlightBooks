@@ -9,8 +9,8 @@ namespace MoonLightBooks.Application.Interfaces
 {
     public interface IOrderService
     {
-        Task<int> CreateOrderAsync(int userId, CreateOrderDto dto);
+        Task<int> CreateOrderAsync(string userId, CreateOrderDto dto);
         Task<OrderDto> GetOrderByIdAsync(int id);
-        Task<List<OrderDto>> GetOrdersAsync(int userId);
+        Task<List<OrderDto>> GetOrdersAsync(string userId);
     }
 }

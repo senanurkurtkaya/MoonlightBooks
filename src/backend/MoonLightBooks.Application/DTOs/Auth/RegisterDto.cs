@@ -13,6 +13,6 @@ namespace MoonLightBooks.Application.DTOs.Auth
         public string Password { get; set; }
 
 
-        public string Role { get; set; } = "User";
+    
     }    
 }

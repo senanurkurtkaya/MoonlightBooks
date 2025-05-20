@@ -23,7 +23,7 @@ namespace MoonLightBooks.API.Controllers
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> AddToCart([FromBody] AddToCartDto dto)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
             await _cartService.AddToCartAsync(userId, dto);
             return Ok(new { message = "Kitap sepete eklendi!" });
         }
@@ -33,7 +33,7 @@ namespace MoonLightBooks.API.Controllers
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> GetCart()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
             var cartItems = await _cartService.GetCartAsync(userId);
             return Ok(cartItems);
         }
@@ -51,7 +51,7 @@ namespace MoonLightBooks.API.Controllers
         [Authorize]
         public async Task<IActionResult> ClearCart()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             await _cartService.ClearCartAsync(userId);
             return NoContent();
         }

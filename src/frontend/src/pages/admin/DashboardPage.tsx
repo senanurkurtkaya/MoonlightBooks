@@ -16,15 +16,33 @@ const DashboardPage = () => {
   const [monthlySales, setMonthlySales] = useState<{ Month: string; Total: number }[]>([]);
 
   useEffect(() => {
-    fetch("https://localhost:7202/api/admin/dashboard")
-
-      .then((res) => res.json())
+    const token = localStorage.getItem("token");
+  
+    fetch("https://localhost:7202/api/admin/dashboard", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Yetkisiz erişim!");
+        return res.json();
+      })
       .then((data) => setStats(data))
       .catch((err) => console.error("Dashboard verisi alınamadı:", err));
-
-    fetch("https://localhost:7202/api/admin/monthly-sales")
-
-      .then((res) => res.json())
+  
+    fetch("https://localhost:7202/api/admin/monthly-sales", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Yetkisiz erişim!");
+        return res.json();
+      })
       .then((data) => setMonthlySales(data))
       .catch((err) => console.error("Aylık satış verisi alınamadı:", err));
   }, []);

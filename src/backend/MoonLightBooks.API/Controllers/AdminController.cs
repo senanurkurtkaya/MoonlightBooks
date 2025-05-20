@@ -2,25 +2,30 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MoonLightBooks.Application.DTOs.Admin;
+using MoonLightBooks.Application.DTOs.User;
+using MoonLightBooks.Application.Interfaces;
 using MoonLightBooks.Infrastructure.Data;
 
 namespace MoonLightBooks.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/admin")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     public class AdminController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IAdminService _adminService;
 
-        public AdminController(AppDbContext context)
+        public AdminController(AppDbContext context, IAdminService adminService)
         {
             _context = context;
+            _adminService = adminService;
         }
 
         [HttpGet("secret")]
         public IActionResult GetSecret()
         {
+            var admins = _adminService.GetAllAdmins();
             return Ok("🔒 Bu bilgiye sadece admin ulaşabilir. Hoş geldin patron!");
         }
 
@@ -28,7 +33,7 @@ namespace MoonLightBooks.API.Controllers
         public IActionResult GetAllUsers()
         {
             var users = _context.Users
-                .Select(u => new UserListDto
+                .Select(u => new UserDto
                 {
                     Id = u.Id,
                     FullName = u.FullName,
@@ -52,6 +57,7 @@ namespace MoonLightBooks.API.Controllers
 
             return Ok(new { message = $"Kullanıcının rolü '{dto.Role}' olarak güncellendi." });
         }
+
 
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
@@ -96,11 +102,7 @@ namespace MoonLightBooks.API.Controllers
                 totalRevenue,
                
             });
-        }
-
-
-
-
+        } 
     }
 }
 

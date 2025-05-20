@@ -35,7 +35,7 @@ namespace MoonLightBooks.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(BookDto dto)
         {
             await _bookService.CreateAsync(dto);

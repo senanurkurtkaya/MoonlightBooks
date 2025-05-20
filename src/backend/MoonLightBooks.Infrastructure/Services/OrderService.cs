@@ -22,7 +22,7 @@ namespace MoonLightBooks.Infrastructure.Services
         }
 
 
-        public async Task<int> CreateOrderAsync(int userId, CreateOrderDto dto)
+        public async Task<int> CreateOrderAsync(string userId, CreateOrderDto dto)
         {
             if (dto.Items == null || !dto.Items.Any())
                 return 0;
@@ -102,7 +102,7 @@ namespace MoonLightBooks.Infrastructure.Services
             };
         }
 
-        public async Task<List<OrderDto>> GetOrdersAsync(int userId)
+        public async Task<List<OrderDto>> GetOrdersAsync(string userId)
         {
             var orders = await _context.Orders
                     .Where(o => o.UserId == userId)

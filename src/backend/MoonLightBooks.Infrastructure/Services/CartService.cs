@@ -19,7 +19,7 @@ namespace MoonLightBooks.Infrastructure.Services
             _context = context;
         }
 
-        public async Task AddToCartAsync(int userId, AddToCartDto dto)
+        public async Task AddToCartAsync(string userId, AddToCartDto dto)
         {
             var existing = await _context.CartItems
            .FirstOrDefaultAsync(c => c.UserId == userId && c.BookId == dto.BookId);
@@ -45,7 +45,7 @@ namespace MoonLightBooks.Infrastructure.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task ClearCartAsync(int userId)
+        public async Task ClearCartAsync(string userId)
         {
             var items = await _context.CartItems
         .Where(c => c.UserId == userId)
@@ -55,7 +55,7 @@ namespace MoonLightBooks.Infrastructure.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<CartItemDto>> GetCartAsync(int userId)
+        public async Task<List<CartItemDto>> GetCartAsync(string userId)
         {
             return await _context.CartItems
           .Where(c => c.UserId == userId)

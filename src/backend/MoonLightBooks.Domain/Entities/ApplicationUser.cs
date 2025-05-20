@@ -2,7 +2,7 @@
 
 namespace MoonLightBooks.Domain.Entities
 {
-    public class User : IdentityUser
+    public class ApplicationUser : IdentityUser
     {
         // Tam ad (ad soyad)
         public string FullName { get; set; } = string.Empty;

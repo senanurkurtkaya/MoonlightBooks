@@ -2,25 +2,32 @@
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Security.Claims;
 
-// Gerekli custom using'ler:
+// Custom servisler
 using MoonLightBooks.Infrastructure.Services;
 using MoonLightBooks.Infrastructure.Data;
 using MoonLightBooks.Application.Interfaces;
-using MoonLightBooks.Application.DTOs.Orders;
 using MoonLightBooks.Application.Mapping;
+using MoonLightBooks.Domain.Entities;
 using QuestPDF.Infrastructure;
 using Microsoft.AspNetCore.Identity;
-using MoonLightBooks.Domain.Entities;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.ConfigureLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+});
 
 // CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:3002")
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3002", "https://localhost:7202")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -28,15 +35,16 @@ builder.Services.AddCors(options =>
 
 // Controllers ve DB Context
 builder.Services.AddControllers();
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")
     ));
 
-// QuestPDF
+// QuestPDF Lisans
 QuestPDF.Settings.License = LicenseType.Community;
 
-// Dependency Injection
+// Dependency Injection (Servis Katmanı)
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
@@ -45,15 +53,23 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 
+// AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-
-builder.Services.AddIdentity<User, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
-
+// Identity ayarları (ApplicationUser artık Domain katmanında!)
+builder.Services.AddIdentity<MoonLightBooks.Domain.Entities.ApplicationUser, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
 
 // JWT Authentication
 builder.Services.AddAuthentication("Bearer")
@@ -68,13 +84,14 @@ builder.Services.AddAuthentication("Bearer")
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-               Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+            RoleClaimType = ClaimTypes.Role
         };
     });
 
 builder.Services.AddAuthorization();
 
-// Swagger (JWT entegre)
+// Swagger + JWT
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -84,7 +101,6 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 
-    // Swagger için JWT konfigürasyonu
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -111,11 +127,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ✅ SADECE BİR KEZ APP OLUŞTURULMALI
+// Build & Pipeline
 var app = builder.Build();
 
-
-// Middleware pipeline
 app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");
 

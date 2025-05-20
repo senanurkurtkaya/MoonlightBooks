@@ -1,4 +1,5 @@
 ﻿using MoonLightBooks.Application.DTOs.Auth;
+using MoonLightBooks.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace MoonLightBooks.Application.Interfaces
         Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
         Task<AuthResponseDto> LoginAsync(LoginDto dto);
      
-        Task<ForgotPasswordDto> ForgotPasswordAsync(string email);
+        Task<AuthResult> ForgotPasswordAsync(string email);
       
 
     }

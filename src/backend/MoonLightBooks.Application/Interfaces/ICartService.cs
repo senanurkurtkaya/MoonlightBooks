@@ -9,10 +9,10 @@ namespace MoonLightBooks.Application.Interfaces
 {
     public interface ICartService
     {
-        Task AddToCartAsync(int userId, AddToCartDto dto);
-        Task<List<CartItemDto>> GetCartAsync(int userId);
+        Task AddToCartAsync(string userId, AddToCartDto dto);
+        Task<List<CartItemDto>> GetCartAsync(string userId);
         Task RemoveFromCartAsync(int cartItemId);
-        Task ClearCartAsync(int userId);
+        Task ClearCartAsync(string userId);
 
     }
 }
