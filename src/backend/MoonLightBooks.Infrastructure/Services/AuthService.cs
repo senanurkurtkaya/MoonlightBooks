@@ -2,16 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+
 using MoonLightBooks.Application.DTOs.Auth;
 using MoonLightBooks.Application.Interfaces;
 using MoonLightBooks.Domain.Entities;
 using MoonLightBooks.Infrastructure.Data;
-using System;
+
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 
 namespace MoonLightBooks.Infrastructure.Services

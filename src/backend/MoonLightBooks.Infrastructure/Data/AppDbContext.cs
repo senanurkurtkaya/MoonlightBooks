@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+
 using MoonLightBooks.Domain.Entities;
 using System.Collections.Generic;
 
@@ -8,7 +10,9 @@ namespace MoonLightBooks.Infrastructure.Data
 {
     public class AppDbContext : IdentityDbContext<MoonLightBooks.Domain.Entities.ApplicationUser>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        public AppDbContext(DbContextOptions<AppDbContext> options) 
+            : base(options) { }
+
         public DbSet<MoonLightBooks.Domain.Entities.ApplicationUser> Users => Set<MoonLightBooks.Domain.Entities.ApplicationUser>();
         public DbSet<Book> Books => Set<Book>();
         public DbSet<Category> Categories => Set<Category>();
@@ -21,7 +25,7 @@ namespace MoonLightBooks.Infrastructure.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSeeding((dbContext, _) =>
+            optionsBuilder.UseAsyncSeeding(async (dbContext, _, _) =>
             {
                 var rolesQuery = dbContext.Set<IdentityRole>().AsQueryable();
 
@@ -42,7 +46,7 @@ namespace MoonLightBooks.Infrastructure.Data
                         Name = "Admin",
                         NormalizedName = "admin"
                     };
-
+                    
                     var superAdmin = new ApplicationUser
                     {
                         Id = Guid.NewGuid().ToString(),
@@ -50,8 +54,10 @@ namespace MoonLightBooks.Infrastructure.Data
                         NormalizedEmail = "admin@admin.com",
                         FullName = "Super Admin",
                         UserName = "admin@admin.com",
-                        // TODO: set password hash
                     };
+
+                    var passwordHasher = new PasswordHasher<ApplicationUser>();
+                    superAdmin.PasswordHash = passwordHasher.HashPassword(superAdmin, "pwd123**");
 
                     dbContext.Add(userRole);
                     dbContext.Add(adminRole);
@@ -63,7 +69,7 @@ namespace MoonLightBooks.Infrastructure.Data
                         UserId = superAdmin.Id
                     });
 
-                    dbContext.SaveChanges();
+                    await dbContext.SaveChangesAsync();
                 }
             });
 
