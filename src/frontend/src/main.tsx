@@ -9,12 +9,10 @@ import { CartProvider } from './context/CartContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CartProvider>
           <App />
         </CartProvider>
       </ThemeProvider>
-    </BrowserRouter>
   </React.StrictMode>
 );

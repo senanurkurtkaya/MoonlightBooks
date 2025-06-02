@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
-import {  Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
 import Login from './components/Login';
 import authService from './services/authService';
 import { fetchCategories } from './services/category-service';
+import AboutPage from './pages/AboutPage';
+import BookPage from './pages/BookPage';
+import HomePage from './pages/HomePage';
 
 // Protected Route bileşeni
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -58,34 +61,39 @@ const AdminPanel: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
+        <BrowserRouter>
+            <Routes>
+                {/* Public routes */}
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/books" element={<BookPage />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<Login />} />
 
-            {/* Protected routes */}
-            <Route path="/dashboard" element={
-                <ProtectedRoute>
-                    <Dashboard />
-                </ProtectedRoute>
-            } />
+                {/* Protected routes */}
+                <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                        <Dashboard />
+                    </ProtectedRoute>
+                } />
 
-            {/* Admin routes */}
-            <Route path="/admin" element={
-                <AdminRoute>
-                    <AdminPanel />
-                </AdminRoute>
-            } />
+                {/* Admin routes */}
+                <Route path="/admin" element={
+                    <AdminRoute>
+                        <AdminPanel />
+                    </AdminRoute>
+                } />
 
-            {/* Default route */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                {/* Default route */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-            {/* 404 route */}
-            <Route path="*" element={
-                <div className="min-h-screen flex items-center justify-center">
-                    <h1 className="text-2xl font-bold">404 - Sayfa Bulunamadı</h1>
-                </div>
-            } />
-        </Routes>
+                {/* 404 route */}
+                <Route path="*" element={
+                    <div className="min-h-screen flex items-center justify-center">
+                        <h1 className="text-2xl font-bold">404 - Sayfa Bulunamadı</h1>
+                    </div>
+                } />
+            </Routes>
+        </BrowserRouter>
     );
 };
 
