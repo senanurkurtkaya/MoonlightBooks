@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MoonLightBooks.Application.DTOs;
 using MoonLightBooks.Application.DTOs.Admin;
@@ -9,6 +10,7 @@ namespace MoonLightBooks.API.Controllers
 {
     [Route("api/categories")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _service;

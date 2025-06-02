@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://localhost:7202/api';
 
 interface FetchOptions extends RequestInit {
     token?: string;
@@ -38,6 +38,7 @@ export const api = {
     get: (endpoint: string, options?: FetchOptions) => 
         fetchApi(endpoint, { ...options, method: 'GET' }),
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     post: (endpoint: string, data: any, options?: FetchOptions) =>
         fetchApi(endpoint, {
             ...options,
@@ -45,6 +46,7 @@ export const api = {
             body: JSON.stringify(data)
         }),
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     put: (endpoint: string, data: any, options?: FetchOptions) =>
         fetchApi(endpoint, {
             ...options,

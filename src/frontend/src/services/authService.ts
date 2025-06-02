@@ -20,7 +20,7 @@ export interface AuthResponse {
 class AuthService {
     async login(data: LoginRequest): Promise<AuthResponse> {
         try {
-            const response = await api.post<AuthResponse>('/auth/login', data);
+            const response = await api.post('/account/login', data);
             if (response.token) {
                 localStorage.setItem('token', response.token);
                 localStorage.setItem('user', JSON.stringify({
@@ -37,7 +37,7 @@ class AuthService {
 
     async register(data: RegisterRequest): Promise<AuthResponse> {
         try {
-            const response = await api.post<AuthResponse>('/auth/register', data);
+            const response = await api.post('/account/register', data);
             if (response.token) {
                 localStorage.setItem('token', response.token);
                 localStorage.setItem('user', JSON.stringify({
