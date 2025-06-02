@@ -1,7 +1,5 @@
 import { useCart } from '../context/CartContext';
-
-
-
+import { useAuth } from '../context/AuthContext';
 import {
   AppBar,
   Toolbar,
@@ -14,20 +12,14 @@ import {
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser } from '../utils/auth';
-import { UserDto } from "../models/user/UserDTO";
-
-
-
 
 export default function Header() {
   const navigate = useNavigate();
   const { getCartCount } = useCart();
-  const user: UserDto | null = getCurrentUser()
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+    logout();
   };
 
   return (
@@ -41,7 +33,7 @@ export default function Header() {
                 <Typography sx={{ color: 'white', alignSelf: 'center' }}>
                   Merhaba, {user?.fullName || user?.email}
                 </Typography>
-                {user.role === "admin" && (
+                {user.role === "Admin" && (
                   <Button color="inherit" onClick={() => navigate("/admin/dashboard")}>
                     Yönetim Paneli
                   </Button>
@@ -90,7 +82,9 @@ export default function Header() {
         <Button color="inherit" onClick={() => navigate('/books')}>Tüm Kitaplar</Button>
         <Button color="inherit" onClick={() => navigate('/category/1')}>Kategoriler</Button>
         <Button color="inherit" onClick={() => navigate('/cart')}>Sepetim</Button>
-        <Button color="inherit" onClick={() => navigate('/orders')}>Siparişlerim</Button>
+        {user && (
+          <Button color="inherit" onClick={() => navigate('/orders')}>Siparişlerim</Button>
+        )}
 
         <TextField
           variant="outlined"

@@ -9,11 +9,11 @@ namespace MoonLightBooks.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class AccountController : ControllerBase
     {
         private readonly IAuthService _authService;
 
-        public AuthController(IAuthService authService)
+        public AccountController(IAuthService authService)
         {
             _authService = authService;
         }

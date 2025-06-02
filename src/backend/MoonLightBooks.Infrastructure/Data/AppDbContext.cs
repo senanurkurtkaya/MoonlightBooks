@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MoonLightBooks.Domain.Entities;
 using System.Collections.Generic;
@@ -17,9 +18,78 @@ namespace MoonLightBooks.Infrastructure.Data
         public DbSet<CartItem> CartItems => Set<CartItem>();
         public DbSet<Review> Reviews { get; set; }
 
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSeeding((dbContext, _) =>
+            {
+                var rolesQuery = dbContext.Set<IdentityRole>().AsQueryable();
+
+                if (!rolesQuery.Any())
+                {
+                    var userRole = new IdentityRole
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        ConcurrencyStamp = DateTime.Now.Ticks.ToString(),
+                        Name = "User",
+                        NormalizedName = "user"
+                    };
+
+                    var adminRole = new IdentityRole
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        ConcurrencyStamp = DateTime.Now.Ticks.ToString(),
+                        Name = "Admin",
+                        NormalizedName = "admin"
+                    };
+
+                    var superAdmin = new ApplicationUser
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Email = "admin@admin.com",
+                        NormalizedEmail = "admin@admin.com",
+                        FullName = "Super Admin",
+                        UserName = "admin@admin.com",
+                        // TODO: set password hash
+                    };
+
+                    dbContext.Add(userRole);
+                    dbContext.Add(adminRole);
+                    dbContext.Add(superAdmin);
+
+                    dbContext.Set<IdentityUserRole<string>>().Add(new IdentityUserRole<string>
+                    {
+                        RoleId = adminRole.Id,
+                        UserId = superAdmin.Id
+                    });
+
+                    dbContext.SaveChanges();
+                }
+            });
+
+            base.OnConfiguring(optionsBuilder);
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure decimal properties for precision and scale
+            modelBuilder.Entity<Book>()
+                .Property(b => b.Price)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Order>()
+                .Property(o => o.TotalAmount)
+                .HasColumnType("decimal(18,2)");
+            
+            modelBuilder.Entity<Order>()
+                .Property(o => o.TotalPrice)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<OrderItem>()
+                .Property(oi => oi.UnitPrice)
+                .HasColumnType("decimal(18,2)");
 
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.User)
@@ -51,8 +121,6 @@ namespace MoonLightBooks.Infrastructure.Data
 
 
 
-        }
-
-     
+        }     
     }
 }

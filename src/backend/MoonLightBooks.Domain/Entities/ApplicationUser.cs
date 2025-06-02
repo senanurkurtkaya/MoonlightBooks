@@ -10,12 +10,6 @@ namespace MoonLightBooks.Domain.Entities
         // E-posta adresi
         public string Email { get; set; } = string.Empty;
 
-        // Şifre hash'i
-        public string PasswordHash { get; set; } = string.Empty;
-
-        // Rol (Admin / User)
-        public string Role { get; set; } = "User";
-
         // Kullanıcı aktif mi?
         public bool IsActive { get; set; } = true;
 

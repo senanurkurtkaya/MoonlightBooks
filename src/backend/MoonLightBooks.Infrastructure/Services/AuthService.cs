@@ -8,8 +8,8 @@ using MoonLightBooks.Domain.Entities;
 using MoonLightBooks.Infrastructure.Data;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -39,70 +39,49 @@ namespace MoonLightBooks.Infrastructure.Services
             if (await _userManager.FindByEmailAsync(dto.Email) != null)
                 throw new Exception("Bu email adresi zaten kayıtlı.");
 
-            var passwordHash = HashPassword(dto.Password);
-
             var user = new ApplicationUser
             {
                 FullName = dto.FullName,
                 Email = dto.Email.ToLower(),
                 UserName = dto.Email.ToLower(),
-                PasswordHash = passwordHash,
-                Role = "User" // default rolü saklamak istiyorsan
+                IsActive = true,
+                RegisteredAt = DateTime.UtcNow
             };
 
-            // EF ile kaydet
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            var result = await _userManager.CreateAsync(user, dto.Password);
+            if (!result.Succeeded)
+                throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
 
-            // Identity tablosuna rol ataması
             var role = "User";
-
             if (!await _roleManager.RoleExistsAsync(role))
                 await _roleManager.CreateAsync(new IdentityRole(role));
-
             await _userManager.AddToRoleAsync(user, role);
 
-            return GenerateToken(user);
+            return await GenerateToken(user);
         }
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.ToLower());
-
-            if (user == null || !VerifyPassword(dto.Password, user.PasswordHash))
+            if (user == null)
                 throw new Exception("Geçersiz email veya şifre.");
-
-            return GenerateToken(user);
+            if (!await _userManager.CheckPasswordAsync(user, dto.Password))
+                throw new Exception("Geçersiz email veya şifre.");
+            return await GenerateToken(user);
         }
 
-        private string HashPassword(string password)
-        {
-            var key = Encoding.UTF8.GetBytes("gizli-test-key-12345678901234567890"); // min 32 byte
-            using var hmac = new HMACSHA256(key);
-            var passwordBytes = Encoding.UTF8.GetBytes(password);
-            var hashBytes = hmac.ComputeHash(passwordBytes);
-            return Convert.ToBase64String(hashBytes);
-        }
-
-        private bool VerifyPassword(string password, string storedHash)
-        {
-            return HashPassword(password) == storedHash;
-        }
-
-     
-        private AuthResponseDto GenerateToken(ApplicationUser user)
+        private async Task<AuthResponseDto> GenerateToken(ApplicationUser user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = new List<Claim>
             {
-        new Claim("fullName", user.FullName),
-        new Claim(ClaimTypes.Email, user.Email),
-        new Claim(ClaimTypes.Role, user.Role), // 👈 BU ÖNEMLİ
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-    };
-
+                new Claim("fullName", user.FullName),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            };
+            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
@@ -110,16 +89,13 @@ namespace MoonLightBooks.Infrastructure.Services
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds
             );
-
             return new AuthResponseDto
             {
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
                 Username = user.FullName,
-                Role = user.Role
+                Roles = roles.ToList()
             };
         }
-
-
 
         public async Task<AuthResult> ForgotPasswordAsync(string email)
         {

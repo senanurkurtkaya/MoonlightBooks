@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MoonLightBooks.Domain.Entities;
+using System.Security.Claims;
 
 namespace MoonLightBooks.API.Controllers
 {
@@ -83,6 +84,53 @@ namespace MoonLightBooks.API.Controllers
                 }
 
                 return Ok("Rol başarıyla atandı.");
+            }
+
+            // 3. Kullanıcı Silme
+            [HttpDelete("{userId}")]
+            [Authorize(Roles = "Admin")]
+            public async Task<IActionResult> DeleteUser(string userId)
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound("Kullanıcı bulunamadı.");
+                }
+
+                // Admin kendi hesabını silemesin
+                var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+                if (user.Email.ToLower() == currentUserEmail?.ToLower())
+                {
+                    return BadRequest(new { message = "Kendi hesabınızı silemezsiniz." });
+                }
+
+                // Son admin mi?
+                var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+                if (isAdmin)
+                {
+                    var allUsers = await _userManager.Users.ToListAsync();
+                    var adminCount = 0;
+                    foreach (var appUser in allUsers)
+                    {
+                        if (await _userManager.IsInRoleAsync(appUser, "Admin"))
+                        {
+                            adminCount++;
+                        }
+                    }
+
+                    if (adminCount <= 1)
+                    {
+                        return BadRequest(new { message = "Sistemde en az bir admin kalmalıdır." });
+                    }
+                }
+
+                var result = await _userManager.DeleteAsync(user);
+                if (!result.Succeeded)
+                {
+                     return BadRequest("Kullanıcı silinirken bir hata oluştu.");
+                }
+
+                return Ok(new { message = "Kullanıcı başarıyla silindi." });
             }
         }
     }

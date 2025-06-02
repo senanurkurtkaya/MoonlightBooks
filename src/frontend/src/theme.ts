@@ -3,7 +3,7 @@ import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
-    mode: 'light', // işte bu açık tema için
+    mode: 'light',
     primary: {
       main: '#ec6c7c', // pembe tonu
     },

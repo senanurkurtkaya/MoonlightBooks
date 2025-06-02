@@ -9,6 +9,6 @@ namespace MoonLightBooks.Application.Interfaces
 {
     public interface IAdminService
     {
-        List<UserDto> GetAllAdmins();
+        Task<List<UserDto>> GetAllAdmins();
     }
 }

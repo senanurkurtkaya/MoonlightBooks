@@ -1,61 +1,87 @@
-import { Routes, Route } from "react-router-dom";
-import MainLayout from "./layouts/MainLayout";
-import AdminLayout from "./layouts/AdminLayout";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './components/Login';
+import authService from './services/authService';
 
+// Protected Route bileşeni
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    if (!authService.isAuthenticated()) {
+        return <Navigate to="/login" replace />;
+    }
+    return <>{children}</>;
+};
 
-// Public Pages
+// Admin Route bileşeni
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    if (!authService.isAuthenticated() || !authService.hasRole('Admin')) {
+        return <Navigate to="/login" replace />;
+    }
+    return <>{children}</>;
+};
 
-import HomePage from "./pages/HomePage";
-import AboutPage from "./pages/AboutPage";
-import BookPage from "./pages/BookPage";
-import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import ContactPage from "./pages/ContactPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import OrdersPage from "./pages/OrdersPage";
-import CategoryPage from "./pages/CategoryPage";
-import NotFoundPage from "./pages/NotFoundPage";
+// Geçici Dashboard bileşeni
+const Dashboard: React.FC = () => {
+    const user = authService.getCurrentUser();
+    return (
+        <div className="p-4">
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <p>Hoş geldin, {user?.username}!</p>
+            <button
+                onClick={() => {
+                    authService.logout();
+                    window.location.href = '/login';
+                }}
+                className="mt-4 bg-red-500 text-white px-4 py-2 rounded"
+            >
+                Çıkış Yap
+            </button>
+        </div>
+    );
+};
 
-// Admin Pages
-import DashboardPage from "./pages/admin/DashboardPage";
-import BookAdminPage from "./pages/admin/BookAdminPage";
-import CategoryAdminPage from "./pages/admin/CategoryAdminPage";
+// Geçici Admin Panel bileşeni
+const AdminPanel: React.FC = () => {
+    return (
+        <div className="p-4">
+            <h1 className="text-2xl font-bold">Admin Panel</h1>
+            <p>Bu sayfayı sadece adminler görebilir.</p>
+        </div>
+    );
+};
 
-
-function App() {
-  return (
-    <Routes>
-
-      {/* Main Layout Routes */}
-      <Route path="/" element={<MainLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="about" element={<AboutPage />} />
-        <Route path="books" element={<BookPage />} />
-        <Route path="category/:categoryId" element={<CategoryPage />} />
-        <Route path="cart" element={<CartPage />} />
-        <Route path="checkout" element={<CheckoutPage />} />
-        <Route path="contact" element={<ContactPage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
-        <Route path="orders" element={<OrdersPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
- 
-      </Route>
-
-      {/* Admin Layout Routes */}
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route path="books" element={<BookAdminPage />} />
-        <Route path="categories" element={<CategoryAdminPage />} />
-        <Route path="/admin/dashboard" element={<DashboardPage />} />
-        
-
-      </Route>
-
-    </Routes>
-  );
-}
+const App: React.FC = () => {
+    return (
+        <BrowserRouter>
+            <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<Login />} />
+                
+                {/* Protected routes */}
+                <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                        <Dashboard />
+                    </ProtectedRoute>
+                } />
+                
+                {/* Admin routes */}
+                <Route path="/admin" element={
+                    <AdminRoute>
+                        <AdminPanel />
+                    </AdminRoute>
+                } />
+                
+                {/* Default route */}
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                
+                {/* 404 route */}
+                <Route path="*" element={
+                    <div className="min-h-screen flex items-center justify-center">
+                        <h1 className="text-2xl font-bold">404 - Sayfa Bulunamadı</h1>
+                    </div>
+                } />
+            </Routes>
+        </BrowserRouter>
+    );
+};
 
 export default App;
